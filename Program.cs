@@ -1,9 +1,8 @@
-﻿
-public class Program
-{
-    public static void Main()
-    {
-        Console.WriteLine("asldfj");
+﻿namespace Chip8;
 
+class Program
+{
+    static void Main(string[] args)
+    {
     }
 }
