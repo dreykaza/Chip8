@@ -1,4 +1,4 @@
-namespace Chip8.core;
+namespace Chip8.Core;
 
 public class CPU
 {
@@ -8,6 +8,6 @@ public class CPU
     public static int DT = 0;  // delay timer 
     public static int ST = 0;  // sound timer
     public static int SP = -1; // stack pointer 
-    public static ushort I = 0; //memory adres store
+    public static ushort I = 0; //memory addres store
     public static byte[] Registres = new byte[16];
 }
