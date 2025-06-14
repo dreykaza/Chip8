@@ -2,35 +2,49 @@ namespace Chip8.Core;
 
 public class Instruction
 {
-    delegate void OpHandler(ushort opcode);
+    public delegate void OpHandler(ushort opcode);
+    public static OpHandler[] instruction = new OpHandler[16];
 
-    OpHandler[] instruction = new OpHandler[16];
-
-    public Instruction()
+    public static OpHandler[] CreateInstructionTable()
     {
         instruction[0x0] = Group0;
         instruction[0x1] = opcode => Jump((ushort)(opcode & 0x0FFF));
         instruction[0x2] = opcode => Call((ushort)(opcode & 0x0FFF));
-        instruction[0x3] = opcode => SkipIfEqual((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00FF));
-        instruction[0x4] = opcode => SkipIfNotEqual((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00FF));
-        instruction[0x5] = opcode => SkipIfEqualReg((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00F0 >> 4));
-        instruction[0x6] = opcode => SetReg((ushort)(opcode & 0x0F00 >> 8), (byte)(opcode & 0x00FF));
-        instruction[0x7] = opcode => Add((ushort)(opcode & 0x0F00 >> 8), (byte)(opcode & 0x00FF));
-        instruction[0x8] = opcode => Group8((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00F0 >> 4), (ushort)(opcode & 0x000F));
-        instruction[0x9] = opcode => SkipIfNotEqualReg((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00F0 >> 4));
+        instruction[0x3] = opcode => SkipIfEqual((ushort)((opcode & 0x0F00) >> 8), (ushort)(opcode & 0x00FF));
+        instruction[0x4] = opcode => SkipIfNotEqual((ushort)((opcode & 0x0F00) >> 8), (ushort)(opcode & 0x00FF));
+        instruction[0x5] = opcode => SkipIfEqualReg((ushort)((opcode & 0x0F00) >> 8), (ushort)((opcode & 0x00F0) >> 4));
+        instruction[0x6] = opcode => SetReg((ushort)((opcode & 0x0F00) >> 8), (byte)(opcode & 0x00FF));
+        instruction[0x7] = opcode => Add((ushort)((opcode & 0x0F00) >> 8), (byte)(opcode & 0x00FF));
+        instruction[0x8] = opcode => Group8((ushort)((opcode & 0x0F00) >> 8), (ushort)((opcode & 0x00F0) >> 4), (ushort)(opcode & 0x000F));
+        instruction[0x9] = opcode => SkipIfNotEqualReg((ushort)((opcode & 0x0F00) >> 8), (ushort)((opcode & 0x00F0) >> 4));
         instruction[0xA] = opcode => SetI((ushort)(opcode & 0x0FFF));
         instruction[0xB] = opcode => JumpV0((ushort)(opcode & 0x0FFF));
-        instruction[0xC] = opcode => RandomWithAnd((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00FF));
-        instruction[0xD] = opcode => Draw((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00F0 >> 4), (ushort)(opcode & 0x000F));
-        instruction[0xE] = opcode => GroupE((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00FF));
-        instruction[0xF] = opcode => GroupF((ushort)(opcode & 0x0F00 >> 8), (ushort)(opcode & 0x00FF));
+        instruction[0xC] = opcode => RandomWithAnd((ushort)((opcode & 0x0F00) >> 8), (ushort)(opcode & 0x00FF));
+        instruction[0xD] = opcode => Draw((ushort)((opcode & 0x0F00) >> 8), (ushort)((opcode & 0x00F0) >> 4), (ushort)(opcode & 0x000F));
+        instruction[0xE] = opcode => GroupE((ushort)((opcode & 0x0F00) >> 8), (ushort)(opcode & 0x00FF));
+        instruction[0xF] = opcode => GroupF((ushort)((opcode & 0x0F00) >> 8), (ushort)(opcode & 0x00FF));
+        return instruction;
     }
 
-    public void Group0(ushort opcode)
+    public static void Group0(ushort opcode)
     {
+        switch (opcode)
+        {
+            case 0x000:
+                break;
+
+            case 0x0E0:
+                Console.Clear();
+                break;
+
+            case 0x0EE:
+                CPU.PC = CPU.Stack[CPU.SP];
+                CPU.SP--;
+                break;
+        }
     }
 
-    public void Group8(ushort Vx, ushort Vy, ushort code)
+    public static void Group8(ushort Vx, ushort Vy, ushort code)
     {
         switch (code)
         {
@@ -59,7 +73,7 @@ public class Instruction
                 catch (OverflowException)
                 {
                     CPU.Registres[15] = 1;
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vx] + CPU.Registres[Vy]));
+                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] + CPU.Registres[Vy]);
                 }
                 break;
 
@@ -72,7 +86,7 @@ public class Instruction
                 catch (OverflowException)
                 {
                     CPU.Registres[15] = 0;
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vx] - CPU.Registres[Vy]));
+                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] - CPU.Registres[Vy]);
                 }
                 break;
 
@@ -90,7 +104,7 @@ public class Instruction
                 catch (OverflowException)
                 {
                     CPU.Registres[15] = 1;
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vy] - CPU.Registres[Vx]));
+                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vy] - CPU.Registres[Vx]);
                 }
                 break;
 
@@ -102,39 +116,39 @@ public class Instruction
         }
     }
 
-    public void Jump(ushort position) => CPU.PC = position;
+    public static void Jump(ushort position) => CPU.PC = position;
 
-    public void Call(ushort position)
+    public static void Call(ushort position)
     {
         CPU.SP++;
         CPU.Stack[CPU.SP] = CPU.PC;
         CPU.PC = position;
     }
 
-    public void SkipIfEqual(ushort Vx, ushort integer) =>
+    public static void SkipIfEqual(ushort Vx, ushort integer) =>
         CPU.PC += (ushort)(CPU.Registres[Vx] == integer ? 2 : 0);
 
-    public void SkipIfNotEqual(ushort Vx, ushort integer) =>
+    public static void SkipIfNotEqual(ushort Vx, ushort integer) =>
         CPU.PC += (ushort)(CPU.Registres[Vx] == integer ? 0 : 2);
 
-    public void SkipIfEqualReg(ushort Vx, ushort Vy) =>
+    public static void SkipIfEqualReg(ushort Vx, ushort Vy) =>
         CPU.PC += (ushort)(CPU.Registres[Vx] == CPU.Registres[Vy] ? 2 : 0);
 
-    public void SetReg(ushort Vx, byte integer) => CPU.Registres[Vx] = integer;
+    public static void SetReg(ushort Vx, byte integer) => CPU.Registres[Vx] = integer;
 
-    public void Add(ushort Vx, byte integer) => CPU.Registres[Vx] += integer;
+    public static void Add(ushort Vx, byte integer) => CPU.Registres[Vx] += integer;
 
-    public void SkipIfNotEqualReg(ushort Vx, ushort Vy) =>
+    public static void SkipIfNotEqualReg(ushort Vx, ushort Vy) =>
         CPU.PC += (ushort)(CPU.Registres[Vx] == CPU.Registres[Vy] ? 0 : 2);
 
-    public void SetI(ushort integer) => CPU.I = integer;
+    public static void SetI(ushort integer) => CPU.I = integer;
 
-    public void JumpV0(ushort position) => CPU.PC = (ushort)(position + CPU.Registres[0]);
+    public static void JumpV0(ushort position) => CPU.PC = (ushort)(position + CPU.Registres[0]);
 
-    public void RandomWithAnd(ushort Vx, ushort kk) =>
+    public static void RandomWithAnd(ushort Vx, ushort kk) =>
         CPU.Registres[Vx] = (byte)((new Random()).Next(255) & kk);
 
-    public void Draw(ushort Vx, ushort Vy, ushort n)
+    public static void Draw(ushort Vx, ushort Vy, ushort n)
     {
         CPU.Registres[15] = 0;
         int x, y;
@@ -148,38 +162,37 @@ public class Instruction
             if (Vy + layer >= 32) { y = Vy - 32 + layer; } else { y = Vy + layer; }
             for (int i = 0; i < 8; i++)
                 bits[i] = (item & (1 << (7 - i))) != 0;
-
-            int lastTrueIndex = -1;
-            for (int i = 7; i >= 0; i--)
-            {
-                if (bits[i])
-                {
-                    lastTrueIndex = i;
-                    break;
-                }
-            }
-
-            bool[] trimmed = new bool[lastTrueIndex + 1];
-            Array.Copy(bits, trimmed, trimmed.Length);
-            for (int j = 0; j < trimmed.Length; j++)
+            // int lastTrueIndex = -1;
+            // for (int i = 7; i >= 0; i--)
+            // { 
+            //     if (bits[i])
+            //     {
+            //         lastTrueIndex = i;
+            //         break;
+            //     }
+            // }
+            //
+            // bool[] trimmed = new bool[lastTrueIndex + 1];
+            // Array.Copy(bits, trimmed, trimmed.Length);
+            for (int j = 0; j < bits.Length; j++)
             {
                 if (Vx + j >= 64) { x = Vx - 64 + j; } else { x = Vx + j; }
 
-                if (Display.Pixels[y, x] && trimmed[j])
+                if (Display.Pixels[y, x] && bits[j])
                 {
                     CPU.Registres[15] = 1;
-                    Display.Pixels[y, x] ^= trimmed[j];
+                    Display.Pixels[y, x] ^= bits[j];
                 }
                 else
                 {
-                    Display.Pixels[y, x] ^= trimmed[j];
+                    Display.Pixels[y, x] ^= bits[j];
                 }
             }
             layer++;
         }
     }
 
-    public void GroupE(ushort Vx, ushort code)
+    public static void GroupE(ushort Vx, ushort code)
     {
         switch (code)
         {
@@ -192,7 +205,7 @@ public class Instruction
                 break;
         }
     }
-    public void GroupF(ushort Vx, ushort code)
+    public static void GroupF(ushort Vx, ushort code)
     {
         switch (code)
         {

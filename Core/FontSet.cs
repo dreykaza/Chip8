@@ -2,7 +2,7 @@ namespace Chip8.Core;
 
 public class FontSet
 {
-    public byte[] fontSet = new byte[]
+    public static byte[] fontSet = new byte[]
     {
     // 0
     0xF0, 0x90, 0x90, 0x90, 0xF0,
