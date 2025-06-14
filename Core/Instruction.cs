@@ -34,8 +34,11 @@ public class Instruction
                 break;
 
             case 0x0E0:
-                Console.Clear();
+                for (int i = 0; i < 32; i++)
+                    for (int j = 0; j < 64; j++)
+                        Display.Pixels[i, j] = false;
                 break;
+
 
             case 0x0EE:
                 CPU.PC = CPU.Stack[CPU.SP];
@@ -159,26 +162,15 @@ public class Instruction
         int layer = 0;
         foreach (var item in sprite)
         {
-            if (Vy + layer >= 32) { y = Vy - 32 + layer; } else { y = Vy + layer; }
+            if (CPU.Registres[Vy] + layer >= 32) { y = CPU.Registres[Vy] - 32 + layer; } else { y = CPU.Registres[Vy] + layer; }
             for (int i = 0; i < 8; i++)
                 bits[i] = (item & (1 << (7 - i))) != 0;
-            // int lastTrueIndex = -1;
-            // for (int i = 7; i >= 0; i--)
-            // { 
-            //     if (bits[i])
-            //     {
-            //         lastTrueIndex = i;
-            //         break;
-            //     }
-            // }
-            //
-            // bool[] trimmed = new bool[lastTrueIndex + 1];
-            // Array.Copy(bits, trimmed, trimmed.Length);
+
             for (int j = 0; j < bits.Length; j++)
             {
-                if (Vx + j >= 64) { x = Vx - 64 + j; } else { x = Vx + j; }
-
-                if (Display.Pixels[y, x] && bits[j])
+                if (CPU.Registres[Vx] + j >= 64) { x = CPU.Registres[Vx] - 64 + j; } else { x = CPU.Registres[Vx] + j; }
+                if (Display.Pixels[y, x]
+                        && bits[j])
                 {
                     CPU.Registres[15] = 1;
                     Display.Pixels[y, x] ^= bits[j];

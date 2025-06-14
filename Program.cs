@@ -4,7 +4,10 @@ class Program
 {
     static void Main(string[] args)
     {
-        byte[] game = File.ReadAllBytes("Tetris.ch8");
+        Console.WriteLine("Name");
+        string name = Console.ReadLine();
+        string filePath = Path.Combine("ROMs", name);
+        byte[] game = File.ReadAllBytes(filePath);
         Emulator.Start(game);
     }
 }
