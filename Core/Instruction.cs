@@ -3,7 +3,7 @@ namespace Chip8.Core;
 public class Instruction
 {
     public delegate void OpHandler(ushort opcode);
-    public static OpHandler[] instruction = new OpHandler[16];
+    private static OpHandler[] instruction = new OpHandler[16];
 
     public static OpHandler[] CreateInstructionTable()
     {
@@ -49,6 +49,7 @@ public class Instruction
 
     public static void Group8(ushort Vx, ushort Vy, ushort code)
     {
+        bool overflow;
         switch (code)
         {
             case 0x0:
@@ -56,76 +57,57 @@ public class Instruction
                 break;
 
             case 0x1:
-                CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] | CPU.Registres[Vy]);
+                CPU.Registres[Vx] |= CPU.Registres[Vy];
                 break;
 
             case 0x2:
-                CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] & CPU.Registres[Vy]);
+                CPU.Registres[Vx] &= CPU.Registres[Vy];
                 break;
 
             case 0x3:
-                CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] ^ CPU.Registres[Vy]);
+                CPU.Registres[Vx] ^= CPU.Registres[Vy];
                 break;
 
             case 0x4:
-                CPU.Registres[15] = 0;
-                try
-                {
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vx] + CPU.Registres[Vy]));
-                }
-                catch (OverflowException)
-                {
-                    CPU.Registres[15] = 1;
-                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] + CPU.Registres[Vy]);
-                }
+                int sum = CPU.Registres[Vx] + CPU.Registres[Vy];
+                CPU.Registres[Vx] = (byte)sum;
+                CPU.Registres[15] = (byte)(sum > 255 ? 1 : 0);
                 break;
 
             case 0x5:
-                CPU.Registres[15] = 1;
-                try
-                {
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vx] - CPU.Registres[Vy]));
-                }
-                catch (OverflowException)
-                {
-                    CPU.Registres[15] = 0;
-                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] - CPU.Registres[Vy]);
-                }
+                overflow = CPU.Registres[Vx] >= CPU.Registres[Vy] ? true : false;
+                CPU.Registres[Vx] -= CPU.Registres[Vy];
+                CPU.Registres[15] = overflow ? (byte)1 : (byte)0; ;
                 break;
 
             case 0x6:
-                CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] / 2);
-                CPU.Registres[15] = (byte)(CPU.Registres[Vx] % 2);
+                overflow = Convert.ToBoolean(CPU.Registres[Vx] & 0x01);
+                CPU.Registres[Vx] >>= 1;
+                CPU.Registres[15] = (byte)(overflow ? 1 : 0);
                 break;
 
             case 0x7:
-                CPU.Registres[15] = 0;
-                try
-                {
-                    CPU.Registres[Vx] = checked((byte)(CPU.Registres[Vy] - CPU.Registres[Vx]));
-                }
-                catch (OverflowException)
-                {
-                    CPU.Registres[15] = 1;
-                    CPU.Registres[Vx] = (byte)(CPU.Registres[Vy] - CPU.Registres[Vx]);
-                }
+                overflow = CPU.Registres[Vy] >= CPU.Registres[Vx] ? true : false;
+                CPU.Registres[Vx] = (byte)(CPU.Registres[Vy] - CPU.Registres[Vx]);
+                CPU.Registres[15] = overflow ? (byte)1 : (byte)0; ;
                 break;
 
             case 0xE:
-                bool overflow = (CPU.Registres[Vx] & 0x80) != 0;
-                CPU.Registres[15] = (byte)(overflow ? 1 : 0);
+                overflow = (CPU.Registres[Vx] & 0x80) != 0;
                 CPU.Registres[Vx] = (byte)(CPU.Registres[Vx] << 1);
+                CPU.Registres[15] = (byte)(overflow ? 1 : 0);
                 break;
         }
     }
 
-    public static void Jump(ushort position) => CPU.PC = position;
+    public static void Jump(ushort position) => CPU.PC = (ushort)(position - 2);
 
     public static void Call(ushort position)
     {
         CPU.SP++;
         CPU.Stack[CPU.SP] = CPU.PC;
         CPU.PC = position;
+        CPU.PC -= 2;
     }
 
     public static void SkipIfEqual(ushort Vx, ushort integer) =>
@@ -154,33 +136,22 @@ public class Instruction
     public static void Draw(ushort Vx, ushort Vy, ushort n)
     {
         CPU.Registres[15] = 0;
-        int x, y;
-        byte[] sprite = new byte[n];
-        for (int i = 0; i < n; i++)
-            sprite[i] = CPU.Memory[CPU.I + i];
-        bool[] bits = new bool[8];
-        int layer = 0;
-        foreach (var item in sprite)
+        for (int row = 0; row < n; row++)
         {
-            if (CPU.Registres[Vy] + layer >= 32) { y = CPU.Registres[Vy] - 32 + layer; } else { y = CPU.Registres[Vy] + layer; }
-            for (int i = 0; i < 8; i++)
-                bits[i] = (item & (1 << (7 - i))) != 0;
-
-            for (int j = 0; j < bits.Length; j++)
+            byte spritelayer = CPU.Memory[CPU.I + row];
+            int y = (CPU.Registres[Vy] + row + 1) % 32;
+            for (int col = 0; col < 8; col++)
             {
-                if (CPU.Registres[Vx] + j >= 64) { x = CPU.Registres[Vx] - 64 + j; } else { x = CPU.Registres[Vx] + j; }
-                if (Display.Pixels[y, x]
-                        && bits[j])
+                bool pixel = ((spritelayer >> (7 - col)) & 1) == 1;
+                int x = (CPU.Registres[Vx] + col) % 64;
+                if (pixel)
                 {
-                    CPU.Registres[15] = 1;
-                    Display.Pixels[y, x] ^= bits[j];
-                }
-                else
-                {
-                    Display.Pixels[y, x] ^= bits[j];
+                    if (Display.Pixels[y, x])
+                        CPU.Registres[15] = 1;
+                    Display.Pixels[y, x] ^= true;
+
                 }
             }
-            layer++;
         }
     }
 
@@ -189,11 +160,11 @@ public class Instruction
         switch (code)
         {
             case 0x9E:
-                CPU.PC += (ushort)(Keyboard.curkey == Keyboard.Controls[Vx] ? 2 : 0);
+                CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 2 : 0);
                 break;
 
             case 0xA1:
-                CPU.PC += (ushort)(Keyboard.curkey == Keyboard.Controls[Vx] ? 0 : 2);
+                CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 0 : 2);
                 break;
         }
     }
@@ -206,13 +177,14 @@ public class Instruction
                 break;
 
             case 0x0A:
-                while (true)
-                {
-                    if (Array.Find(Keyboard.Controls, cur => cur == Keyboard.curkey) != "0")
-                    {
-                        break;
-                    }
-                }
+                // while (true)
+                // {
+                //     if (!(Keyboard.curkey == -1))
+                //     {
+                //         CPU.Registres[Vx] = (byte)(Keyboard.curkey);
+                //         break;
+                //     }
+                // }
                 break;
 
             case 0x15:
@@ -224,7 +196,9 @@ public class Instruction
                 break;
 
             case 0x1E:
-                CPU.I += CPU.Registres[Vx];
+                ushort sum = (ushort)(CPU.I + CPU.Registres[Vx]);
+                CPU.Registres[0xF] = (byte)(sum > 0xFFF ? 1 : 0); // Установка VF
+                CPU.I = sum;
                 break;
 
             case 0x29:
@@ -232,8 +206,9 @@ public class Instruction
                 break;
 
             case 0x33:
-                for (int i = 0; i < Vx.ToString().Length; i++)
-                    CPU.Memory[CPU.I + i] = (byte)(Vx % (10 ^ (Vx.ToString().Length - i)));
+                CPU.Memory[CPU.I] = (byte)(CPU.Registres[Vx] / 100);
+                CPU.Memory[CPU.I + 1] = (byte)((CPU.Registres[Vx] / 10) % 10);
+                CPU.Memory[CPU.I + 2] = (byte)(CPU.Registres[Vx] % 10);
                 break;
 
             case 0x55:

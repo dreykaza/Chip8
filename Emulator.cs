@@ -4,7 +4,8 @@ namespace Chip8;
 
 public class Emulator
 {
-    public static Instruction.OpHandler[] Instructions = Instruction.CreateInstructionTable();
+    private static Instruction.OpHandler[] Instructions = Instruction.CreateInstructionTable();
+
     public static void LoadProgram(byte[] program)
     {
         Array.Copy(FontSet.fontSet, 0, CPU.Memory, 0x0, FontSet.fontSet.Length);
@@ -16,6 +17,7 @@ public class Emulator
         ushort opcode = (ushort)(CPU.Memory[CPU.PC] << 8 | CPU.Memory[CPU.PC + 1]);
         byte hiNibble = (byte)((opcode & 0xF000) >> 12);
         Instructions[hiNibble](opcode);
+
         CPU.PC += 2;
     }
 
@@ -23,15 +25,24 @@ public class Emulator
     {
         LoadProgram(program);
         _ = Task.Run(() => Keyboard.KeyListner());
-        Run();
+        _ = Task.Run(() => InstructionController());
+        _ = Task.Run(() => FrameController());
     }
 
-    public static void Run()
+    public static void InstructionController()
     {
-        int frame = 10000 / 60;
         while (true)
         {
             Step();
+            Thread.Sleep(10);
+        }
+    }
+
+    public static void FrameController()
+    {
+        int frame = 1000 / 60;
+        while (true)
+        {
             Display.ShowDisplay();
             Thread.Sleep(frame);
         }

@@ -9,5 +9,6 @@ class Program
         string filePath = Path.Combine("ROMs", name);
         byte[] game = File.ReadAllBytes(filePath);
         Emulator.Start(game);
+        Task.Delay(-1).Wait();
     }
 }
