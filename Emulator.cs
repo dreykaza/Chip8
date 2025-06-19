@@ -19,14 +19,13 @@ public class Emulator
         Instructions[hiNibble](opcode);
 
         CPU.PC += 2;
+
     }
 
     public static void Start(byte[] program)
     {
         LoadProgram(program);
-        _ = Task.Run(() => Keyboard.KeyListner());
         _ = Task.Run(() => InstructionController());
-        _ = Task.Run(() => FrameController());
     }
 
     public static void InstructionController()
@@ -38,13 +37,5 @@ public class Emulator
         }
     }
 
-    public static void FrameController()
-    {
-        int frame = 1000 / 60;
-        while (true)
-        {
-            Display.ShowDisplay();
-            Thread.Sleep(frame);
-        }
-    }
+
 }

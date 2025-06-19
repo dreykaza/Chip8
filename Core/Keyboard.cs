@@ -1,26 +1,42 @@
+using Raylib_cs;
+using static Raylib_cs.Raylib;
+
 namespace Chip8.Core;
 
 public class Keyboard
 {
-    public static int curkey = -1;
-    public static string[] Controls = new string[0x10] { "D1", "D2", "D3", "D4", "Q", "W", "E", "R", "A", "S", "D", "F", "Z", "X", "C", "V" };
+    public static int curkey;
+
+    private static KeyboardKey[] KeyBindings = new KeyboardKey[0x10]
+    {
+        KeyboardKey.One,
+        KeyboardKey.Two,
+        KeyboardKey.Three,
+        KeyboardKey.Four,
+        KeyboardKey.Q,
+        KeyboardKey.W,
+        KeyboardKey.E,
+        KeyboardKey.R,
+        KeyboardKey.A,
+        KeyboardKey.S,
+        KeyboardKey.D,
+        KeyboardKey.F,
+        KeyboardKey.Z,
+        KeyboardKey.X,
+        KeyboardKey.C,
+        KeyboardKey.V
+    };
+
     public static void KeyListner()
     {
-        _ = Task.Run(() => KeySwitch());
-        while (true)
+        for (int i = 0; i < KeyBindings.Length; i++)
         {
-            ConsoleKeyInfo keyinfo = Console.ReadKey(true);
-            curkey = Array.IndexOf(Controls, keyinfo.Key.ToString());
+            if (IsKeyDown(KeyBindings[i]))
+            {
+                curkey = i;
+                return;
+            }
         }
-    }
-
-    public static void KeySwitch()
-    {
-        while (true)
-        {
-            curkey = -1;
-            Thread.Sleep(70);
-        }
+        curkey = -1;
     }
 }
-

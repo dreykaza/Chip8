@@ -106,8 +106,7 @@ public class Instruction
     {
         CPU.SP++;
         CPU.Stack[CPU.SP] = CPU.PC;
-        CPU.PC = position;
-        CPU.PC -= 2;
+        CPU.PC = (ushort)(position - 2);
     }
 
     public static void SkipIfEqual(ushort Vx, ushort integer) =>
@@ -160,11 +159,11 @@ public class Instruction
         switch (code)
         {
             case 0x9E:
-                CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 2 : 0);
+                // CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 2 : 0);
                 break;
 
             case 0xA1:
-                CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 0 : 2);
+                // CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 0 : 2);
                 break;
         }
     }
@@ -177,14 +176,14 @@ public class Instruction
                 break;
 
             case 0x0A:
-                // while (true)
-                // {
-                //     if (!(Keyboard.curkey == -1))
-                //     {
-                //         CPU.Registres[Vx] = (byte)(Keyboard.curkey);
-                //         break;
-                //     }
-                // }
+                while (true)
+                {
+                    if (!(1 == -1))
+                    {
+                        CPU.Registres[Vx] = (byte)(Keyboard.curkey);
+                        break;
+                    }
+                }
                 break;
 
             case 0x15:
