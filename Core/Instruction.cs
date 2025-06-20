@@ -138,7 +138,7 @@ public class Instruction
         for (int row = 0; row < n; row++)
         {
             byte spritelayer = CPU.Memory[CPU.I + row];
-            int y = (CPU.Registres[Vy] + row + 1) % 32;
+            int y = (CPU.Registres[Vy] + row) % 32;
             for (int col = 0; col < 8; col++)
             {
                 bool pixel = ((spritelayer >> (7 - col)) & 1) == 1;
@@ -156,14 +156,17 @@ public class Instruction
 
     public static void GroupE(ushort Vx, ushort code)
     {
+
+        int key = Keyboard.GetKey();
         switch (code)
         {
+
             case 0x9E:
-                // CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 2 : 0);
+                CPU.PC += (ushort)(key == CPU.Registres[Vx] ? 2 : 0);
                 break;
 
             case 0xA1:
-                // CPU.PC += (ushort)(Keyboard.curkey == Array.IndexOf(Keyboard.Controls, Keyboard.Controls[Vx]) ? 0 : 2);
+                CPU.PC += (ushort)(key == CPU.Registres[Vx] ? 0 : 2);
                 break;
         }
     }
@@ -178,9 +181,10 @@ public class Instruction
             case 0x0A:
                 while (true)
                 {
-                    if (!(1 == -1))
+                    int key = Keyboard.GetKey();
+                    if (!(key == -1))
                     {
-                        CPU.Registres[Vx] = (byte)(Keyboard.curkey);
+                        CPU.Registres[Vx] = (byte)(key);
                         break;
                     }
                 }
@@ -196,7 +200,7 @@ public class Instruction
 
             case 0x1E:
                 ushort sum = (ushort)(CPU.I + CPU.Registres[Vx]);
-                CPU.Registres[0xF] = (byte)(sum > 0xFFF ? 1 : 0); // Установка VF
+                CPU.Registres[0xF] = (byte)(sum > 0xFFF ? 1 : 0);
                 CPU.I = sum;
                 break;
 

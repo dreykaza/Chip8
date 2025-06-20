@@ -7,22 +7,13 @@ class Program
 {
     static void Main(string[] args)
     {
-        // Console.WriteLine("Name");
-        // string name = Console.ReadLine();
-        // string filePath = Path.Combine("ROMs", name);
-        // byte[] game = File.ReadAllBytes(filePath);
-        // Emulator.Start(game);
-        // Task.Delay(-1).Wait();
-
+        string name = args[0];
+        byte[] game = File.ReadAllBytes(name);
+        Emulator.Start(game);
         Raylib.InitWindow(980, 480, "Chip 8");
         Raylib.SetTargetFPS(60);
         while (!Raylib.WindowShouldClose())
         {
-            Keyboard.KeyListner();
-            if (!(Keyboard.curkey == -1))
-            {
-                Console.WriteLine(Keyboard.curkey);
-            }
             Raylib.BeginDrawing();
             Display.ShowDisplay();
             Raylib.EndDrawing();
@@ -30,6 +21,5 @@ class Program
 
         Raylib.CloseWindow();
     }
-
-
 }
+

@@ -9,34 +9,33 @@ public class Keyboard
 
     private static KeyboardKey[] KeyBindings = new KeyboardKey[0x10]
     {
+        KeyboardKey.X,
         KeyboardKey.One,
         KeyboardKey.Two,
         KeyboardKey.Three,
-        KeyboardKey.Four,
         KeyboardKey.Q,
         KeyboardKey.W,
         KeyboardKey.E,
-        KeyboardKey.R,
         KeyboardKey.A,
         KeyboardKey.S,
         KeyboardKey.D,
-        KeyboardKey.F,
         KeyboardKey.Z,
-        KeyboardKey.X,
         KeyboardKey.C,
+        KeyboardKey.Four,
+        KeyboardKey.R,
+        KeyboardKey.F,
         KeyboardKey.V
     };
 
-    public static void KeyListner()
+    public static int GetKey()
     {
         for (int i = 0; i < KeyBindings.Length; i++)
         {
             if (IsKeyDown(KeyBindings[i]))
             {
-                curkey = i;
-                return;
+                return i;
             }
         }
-        curkey = -1;
+        return -1;
     }
 }

@@ -26,6 +26,7 @@ public class Emulator
     {
         LoadProgram(program);
         _ = Task.Run(() => InstructionController());
+        _ = Task.Run(() => TimerController());
     }
 
     public static void InstructionController()
@@ -33,9 +34,18 @@ public class Emulator
         while (true)
         {
             Step();
-            Thread.Sleep(10);
+            Thread.Sleep(7);
         }
     }
 
+    public static void TimerController()
+    {
+        while (true)
+        {
+            CPU.DT--;
+            CPU.ST--;
+            Thread.Sleep(16);
+        }
+    }
 
 }
